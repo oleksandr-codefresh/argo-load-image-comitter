@@ -1,0 +1,24 @@
+{
+  "name": "argo-load-image-comitter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oleksandr-codefresh/argo-load-image-comitter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oleksandr-codefresh/argo-load-image-comitter/issues"
+  },
+  "homepage": "https://github.com/oleksandr-codefresh/argo-load-image-comitter#readme",
+  "dependencies": {
+    "@types/node": "^20.8.9",
+    "js-yaml": "^4.1.0",
+    "ts-node": "^10.9.1"
+  }
+}
