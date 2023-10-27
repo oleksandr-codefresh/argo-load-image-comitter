@@ -12,6 +12,9 @@
 | COMMIT_DEV_DELAY_SEC  | true     | 60      |
 | COMMIT_PRODUCT_DELAY_SEC  | true     | 60      |
 
+
+BASE_REPO_NAME - e.g. `argo-load-product`
+
 Run command
 
 ```
