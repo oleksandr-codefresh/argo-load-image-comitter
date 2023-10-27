@@ -9,12 +9,12 @@ const GH_URL = process.env.GH_URL || "https://github.com"
 const BASE_REPO_NAME = process.env.BASE_REPO_NAME
 const FROM_INDEX = +(process.env.FROM_INDEX || 0)
 const TO_INDEX = +(process.env.TO_INDEX || 0)
-const COMMIT_DELAY_SEC = +(process.env.COMMIT_DELAY_SEC || 60)
+const COMMIT_DEV_DELAY_SEC = +(process.env.COMMIT_DEV_DELAY_SEC || 60)
+const COMMIT_PRODUCT_DELAY_SEC = +(process.env.COMMIT_PRODUCT_DELAY_SEC || 60)
 
 const repoDirName = 'repositories'
-const repoName = getRepoName(FROM_INDEX);
 const reposPath = `${process.cwd()}/${repoDirName}`
-const repoPath = `${process.cwd()}/${repoDirName}/${repoName}`
+const getRepoPath = (repoName: string): string => `${process.cwd()}/${repoDirName}/${repoName}`
 
 const imageOrder = [
     "0.1",
@@ -44,42 +44,54 @@ async function waitTime(sec: number): Promise<any> {
     })
 }
 
-async function updateImage(valuesFilePath: string) {
-    const valuesFileContent = fs.readFileSync(valuesFilePath, {encoding: 'utf-8'})
+async function updateImage(opts: { valuesFilePath: string, repoPath: string }): Promise<string> {
+    const valuesFileContent = fs.readFileSync(opts.valuesFilePath, {encoding: 'utf-8'})
     const yamlObject = yamlUtils.load(valuesFileContent)
     const currentImage = yamlObject.image.tag
     const nextImage = getNextImageName(currentImage)
     yamlObject.image.tag = nextImage
     const newValuesFileContent = yamlUtils.dump(yamlObject)
-    fs.writeFileSync(valuesFilePath, newValuesFileContent)
-    console.log(`new tag - ${nextImage}`)
-    exec(`git -C ${repoPath} add ${valuesFilePath}`)
-    exec(`git -C ${repoPath} commit --message 'new tag - ${nextImage}'`)
-    exec(`git -C ${repoPath} push origin`)
+    fs.writeFileSync(opts.valuesFilePath, newValuesFileContent)
+    await exec(`git -C ${opts.repoPath} add ${opts.valuesFilePath}`)
+    await exec(`git -C ${opts.repoPath} commit --message 'new tag - ${nextImage}'`)
+    await exec(`git -C ${opts.repoPath} push origin`)
+    return nextImage
+}
+
+async function updateRepo(idx: number): Promise<void> {
+    const repoName = getRepoName(idx);
+    const repoPath = `${process.cwd()}/${repoDirName}/${repoName}`
+    const getValuesPath = (folder: string): string => `${repoPath}/${folder}/values.yaml`
+    const devValuesPath = getValuesPath('dev')
+    const prodValuesPath = getValuesPath('prod')
+
+    // actions
+    console.log(`updating ${repoName}`)
+    await exec(`git clone ${getRepoUrlWithCreds(repoName)} ${repoPath}`)
+
+    const newDevImage = await updateImage({ repoPath, valuesFilePath: devValuesPath })
+    console.log(`updated dev image to ${newDevImage}`)
+    await waitTime(COMMIT_DEV_DELAY_SEC)
+    const newProdImage = await updateImage({ repoPath, valuesFilePath: prodValuesPath })
+    console.log(`updated dev image to ${newProdImage}`)
+    await exec(`rm -rf ${repoPath}`)
+    console.log(`removed ${repoName}`)
 }
 
 async function main() {
-
-    const devValuesPath = `${process.cwd()}/${repoDirName}/${repoName}/dev/values.yaml`
-    const prodValuesPath = `${process.cwd()}/${repoDirName}/${repoName}/prod/values.yaml`
-
-    console.log({
-        GH_TOKEN,
-        GH_USER,
-        GH_URL,
-        BASE_REPO_NAME,
-        FROM_INDEX,
-        TO_INDEX,
-        COMMIT_DELAY_SEC
-    })
-
     await exec(`rm -rf ./${repoDirName}`)
     await exec(`mkdir ${repoDirName}`)
-    await exec(`git clone ${getRepoUrlWithCreds(repoName)} ${repoPath}`)
+    const iterations: number[] = new Array(TO_INDEX - FROM_INDEX).fill(null).map((_, idx) => idx + FROM_INDEX)
+    if (!iterations.length) return;
+    for await (const idx of iterations) {
+        if (idx > FROM_INDEX) {
+            console.log(`waiting ${COMMIT_PRODUCT_DELAY_SEC} sec before updating next repot`)
+            await waitTime(COMMIT_PRODUCT_DELAY_SEC)
+        }
+        await updateRepo(idx)
+    }
 
-    await updateImage(devValuesPath)
-    await waitTime(COMMIT_DELAY_SEC)
-    await updateImage(prodValuesPath)
+    console.log('tasks finished')
 }
 
 main()
