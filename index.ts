@@ -79,6 +79,15 @@ async function updateRepo(idx: number): Promise<void> {
 }
 
 async function main() {
+    console.log('Props')
+    console.log({
+        BASE_REPO_NAME,
+        FROM_INDEX,
+        TO_INDEX,
+        COMMIT_DEV_DELAY_SEC,
+        COMMIT_PRODUCT_DELAY_SEC,
+    })
+
     await exec(`rm -rf ./${repoDirName}`)
     await exec(`mkdir ${repoDirName}`)
     const iterations: number[] = new Array(TO_INDEX - FROM_INDEX).fill(null).map((_, idx) => idx + FROM_INDEX)
