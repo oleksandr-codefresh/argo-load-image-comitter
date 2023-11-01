@@ -10,7 +10,7 @@ const BASE_REPO_NAME = process.env.BASE_REPO_NAME
 const FROM_INDEX = +(process.env.FROM_INDEX || 0)
 const TO_INDEX = +(process.env.TO_INDEX || 0)
 const COMMIT_DEV_DELAY_SEC = +(process.env.COMMIT_DEV_DELAY_SEC || 60)
-const COMMIT_PRODUCT_DELAY_SEC = +(process.env.COMMIT_PRODUCT_DELAY_SEC || 60)
+const COMMIT_PRODUCT_DELAY_SEC = +(process.env.COMMIT_PRODUCT_DELAY_SEC || 150)
 
 const repoDirName = 'repositories'
 const reposPath = `${process.cwd()}/${repoDirName}`
@@ -94,7 +94,7 @@ async function main() {
     if (!iterations.length) return;
     for await (const idx of iterations) {
         if (idx > FROM_INDEX) {
-            console.log(`waiting ${COMMIT_PRODUCT_DELAY_SEC} sec before updating next repot`)
+            console.log(`waiting ${COMMIT_PRODUCT_DELAY_SEC} sec before updating next repo`)
             await waitTime(COMMIT_PRODUCT_DELAY_SEC)
         }
         await updateRepo(idx)
