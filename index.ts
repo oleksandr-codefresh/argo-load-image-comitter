@@ -90,7 +90,7 @@ async function main() {
 
     await exec(`rm -rf ./${repoDirName}`)
     await exec(`mkdir ${repoDirName}`)
-    const iterations: number[] = new Array(TO_INDEX - FROM_INDEX).fill(null).map((_, idx) => idx + FROM_INDEX)
+    const iterations: number[] = new Array((TO_INDEX + 1) - FROM_INDEX).fill(null).map((_, idx) => idx + FROM_INDEX)
     if (!iterations.length) return;
     for await (const idx of iterations) {
         if (idx > FROM_INDEX) {
