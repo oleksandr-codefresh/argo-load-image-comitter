@@ -70,10 +70,11 @@ async function updateRepo(idx: number): Promise<void> {
     await exec(`git clone ${getRepoUrlWithCreds(repoName)} ${repoPath}`)
 
     const newDevImage = await updateImage({ repoPath, valuesFilePath: devValuesPath })
-    console.log(`updated dev image to ${newDevImage}`)
+    console.log(`updated dev repo image to ${newDevImage}`)
+    console.log(`waiting ${COMMIT_DEV_DELAY_SEC}`)
     await waitTime(COMMIT_DEV_DELAY_SEC)
     const newProdImage = await updateImage({ repoPath, valuesFilePath: prodValuesPath })
-    console.log(`updated dev image to ${newProdImage}`)
+    console.log(`updated prod repo image to ${newProdImage}`)
     await exec(`rm -rf ${repoPath}`)
     console.log(`removed ${repoName}`)
 }
