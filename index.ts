@@ -88,10 +88,9 @@ function printConfig() {
         TO_INDEX,
         COMMIT_DEV_DELAY_SEC,
         COMMIT_PRODUCT_DELAY_SEC,
-        COMMIT_CYCLE_DELAY_SEC,
     })
     if (COMMIT_CYCLE_DELAY_SEC) {
-        console.warn('Script running in infinitely loop mode')
+        console.warn(`Script running in infinitely loop mode (delay ${COMMIT_CYCLE_DELAY_SEC})`)
     }
 }
 
