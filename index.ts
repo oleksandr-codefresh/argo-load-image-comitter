@@ -11,6 +11,7 @@ const FROM_INDEX = +(process.env.FROM_INDEX || 0)
 const TO_INDEX = +(process.env.TO_INDEX || 0)
 const COMMIT_DEV_DELAY_SEC = +(process.env.COMMIT_DEV_DELAY_SEC || 60)
 const COMMIT_PRODUCT_DELAY_SEC = +(process.env.COMMIT_PRODUCT_DELAY_SEC || 90)
+const COMMIT_CYCLE_DELAY_SEC = +(process.env.COMMIT_CYCLE_DELAY_SEC || 0)
 
 const repoDirName = 'repositories'
 const reposPath = `${process.cwd()}/${repoDirName}`
@@ -79,7 +80,7 @@ async function updateRepo(idx: number): Promise<void> {
     console.log(`removed ${repoName}`)
 }
 
-async function main() {
+function printConfig() {
     console.log('Props')
     console.log({
         BASE_REPO_NAME,
@@ -87,8 +88,14 @@ async function main() {
         TO_INDEX,
         COMMIT_DEV_DELAY_SEC,
         COMMIT_PRODUCT_DELAY_SEC,
+        COMMIT_CYCLE_DELAY_SEC,
     })
+    if (COMMIT_CYCLE_DELAY_SEC) {
+        console.warn('Script running in infinitely loop mode')
+    }
+}
 
+async function main() {
     await exec(`rm -rf ./${repoDirName}`)
     await exec(`mkdir ${repoDirName}`)
     const iterations: number[] = new Array((TO_INDEX + 1) - FROM_INDEX).fill(null).map((_, idx) => idx + FROM_INDEX)
@@ -100,8 +107,14 @@ async function main() {
         }
         await updateRepo(idx)
     }
-
+    if (COMMIT_CYCLE_DELAY_SEC) {
+        console.log(`waiting ${COMMIT_CYCLE_DELAY_SEC} sec before next cycle`)
+        await waitTime(COMMIT_CYCLE_DELAY_SEC)
+        process.nextTick(main)
+        return
+    }
     console.log('tasks finished')
 }
 
+printConfig()
 main()
