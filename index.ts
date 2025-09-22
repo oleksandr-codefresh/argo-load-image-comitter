@@ -17,6 +17,12 @@ const repoDirName = 'repositories'
 const reposPath = `${process.cwd()}/${repoDirName}`
 const getRepoPath = (repoName: string): string => `${process.cwd()}/${repoDirName}/${repoName}`
 
+class Logger {
+    static log(msg: string) {
+        console.log(`[${new Date().toISOString()}] - ${msg}`)
+    }
+}
+
 const imageOrder = [
     "0.1",
     "0.2",
@@ -67,21 +73,21 @@ async function updateRepo(idx: number): Promise<void> {
     const prodValuesPath = getValuesPath('prod')
 
     // actions
-    console.log(`processing repo - ${repoName}`)
+    Logger.log(`processing repo - ${repoName}`)
     await exec(`git clone ${getRepoUrlWithCreds(repoName)} ${repoPath}`)
 
     const newDevImage = await updateImage({ repoPath, valuesFilePath: devValuesPath })
-    console.log(`updated /dev folder image to ${newDevImage}`)
-    console.log(`waiting ${COMMIT_DEV_DELAY_SEC} sec before updating /prod folder image`)
+    Logger.log(`updated /dev folder image to ${newDevImage}`)
+    Logger.log(`waiting ${COMMIT_DEV_DELAY_SEC} sec before updating /prod folder image`)
     await waitTime(COMMIT_DEV_DELAY_SEC)
     const newProdImage = await updateImage({ repoPath, valuesFilePath: prodValuesPath })
-    console.log(`updated /prod folder image to ${newProdImage}`)
+    Logger.log(`updated /prod folder image to ${newProdImage}`)
     await exec(`rm -rf ${repoPath}`)
-    console.log(`removed ${repoName}`)
+    Logger.log(`removed ${repoName}`)
 }
 
 function printConfig() {
-    console.log('Props')
+    Logger.log('Props')
     console.log({
         BASE_REPO_NAME,
         FROM_INDEX,
@@ -101,18 +107,18 @@ async function main() {
     if (!iterations.length) return;
     for await (const idx of iterations) {
         if (idx > FROM_INDEX) {
-            console.log(`waiting ${COMMIT_PRODUCT_DELAY_SEC} sec before updating next repo`)
+            Logger.log(`waiting ${COMMIT_PRODUCT_DELAY_SEC} sec before updating next repo`)
             await waitTime(COMMIT_PRODUCT_DELAY_SEC)
         }
         await updateRepo(idx)
     }
     if (COMMIT_CYCLE_DELAY_SEC) {
-        console.log(`waiting ${COMMIT_CYCLE_DELAY_SEC} sec before next cycle`)
+        Logger.log(`waiting ${COMMIT_CYCLE_DELAY_SEC} sec before next cycle`)
         await waitTime(COMMIT_CYCLE_DELAY_SEC)
         process.nextTick(main)
         return
     }
-    console.log('tasks finished')
+    Logger.log('tasks finished')
 }
 
 printConfig()
